@@ -1,5 +1,3 @@
-<img src="auto-pesquisa-bing.png" width="180">
-
 # 🚀 Auto Pesquisa Bing
 
 Automação de pesquisas no Bing utilizando Python + Playwright com interface moderna em CustomTkinter.
