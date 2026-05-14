@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="auto-pesquisa-bing.png" width="180">
-</p>
+<img src="auto-pesquisa-bing.png" width="180">
 
 # 🚀 Auto Pesquisa Bing
 
