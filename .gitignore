@@ -1,4 +1,5 @@
 __pycache__/
 perfil_*/
+perfis/
 config_app.json
 *.pyc
