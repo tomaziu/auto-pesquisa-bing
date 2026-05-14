@@ -1,0 +1,2 @@
+DELAY_MIN = 5
+DELAY_MAX = 12
