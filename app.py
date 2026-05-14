@@ -5,8 +5,9 @@ import threading
 import json
 import os
 
+
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
+ctk.set_default_color_theme("green")
 
 
 class App(ctk.CTk):
@@ -15,215 +16,149 @@ class App(ctk.CTk):
         super().__init__()
 
         self.title("Auto Pesquisa - Bing")
-        self.geometry("510x720")
-        self.minsize(490, 660)
+        self.geometry("560x760")
+        self.minsize(520, 690)
 
-        # ===================== CORES =====================
-
-        self.cor_principal = "#00d4ff"
-        self.cor_secundaria = "#6366f1"
-        self.cor_bg = "#0a0a0f"
-        self.cor_card = "#12121a"
+        self.cor_principal = "#38bdf8"
+        self.cor_secundaria = "#10b981"
+        self.cor_bg = "#0f172a"
+        self.cor_card = "#111827"
+        self.cor_card_claro = "#182235"
+        self.cor_input = "#0b1220"
+        self.cor_borda = "#263449"
+        self.cor_texto = "#e5edf6"
+        self.cor_texto_suave = "#94a3b8"
 
         self.configure(fg_color=self.cor_bg)
 
-        # ===================== TOPMOST =====================
-
         self.attributes("-topmost", True)
-
-        self.bind(
-            "<Unmap>",
-            lambda e: self.attributes("-topmost", False)
-        )
-
-        self.bind(
-            "<Map>",
-            lambda e: self.attributes("-topmost", True)
-        )
+        self.bind("<Unmap>", lambda e: self.attributes("-topmost", False))
+        self.bind("<Map>", lambda e: self.attributes("-topmost", True))
 
         self.processo = None
+        self.niveis_vars = []
 
-        # ===================== TOPO =====================
+        self.criar_topo()
+        self.criar_conteudo()
+        self.carregar_config()
+        self.atualizar_niveis()
+        self.atualizar_botoes()
+        self.log("[SISTEMA] Interface carregada com sucesso.")
 
+    # =========================================================
+
+    def criar_topo(self):
         self.topo = ctk.CTkFrame(
             self,
-            fg_color="transparent",
-            height=90
+            fg_color=self.cor_card,
+            corner_radius=0,
+            height=108
         )
-
-        self.topo.pack(fill="x", pady=(5, 0))
+        self.topo.pack(fill="x")
 
         self.titulo = ctk.CTkLabel(
             self.topo,
-            text="AUTO PESQUISA",
-            font=("Segoe UI", 24, "bold"),
-            text_color=self.cor_principal
+            text="Auto Pesquisa Bing",
+            font=("Segoe UI", 27, "bold"),
+            text_color=self.cor_texto
         )
-
-        self.titulo.pack(pady=(12, 0))
+        self.titulo.pack(pady=(18, 0))
 
         self.subtitulo = ctk.CTkLabel(
             self.topo,
-            text="Automação de Pesquisas • Bing",
-            font=("Segoe UI", 11),
-            text_color="#94a3b8"
+            text="Automacao de pesquisas com perfis separados",
+            font=("Segoe UI", 12),
+            text_color=self.cor_texto_suave
         )
-
         self.subtitulo.pack()
 
         ctk.CTkFrame(
             self.topo,
-            fg_color=self.cor_principal,
-            height=2
-        ).pack(fill="x", padx=60, pady=(10, 0))
+            fg_color=self.cor_secundaria,
+            height=3
+        ).pack(fill="x", padx=76, pady=(14, 0))
 
-        # ===================== CONTAINER =====================
+    # =========================================================
 
+    def criar_conteudo(self):
         self.container = ctk.CTkScrollableFrame(
             self,
             fg_color=self.cor_card,
-            corner_radius=20,
-            border_width=0
+            corner_radius=16,
+            border_width=1,
+            border_color=self.cor_borda
         )
-
         self.container.pack(
             fill="both",
             expand=True,
-            padx=16,
-            pady=16
+            padx=18,
+            pady=18
         )
 
-        # ===================== STATUS =====================
+        self.status_frame = ctk.CTkFrame(
+            self.container,
+            fg_color=self.cor_input,
+            corner_radius=12,
+            border_width=1,
+            border_color=self.cor_borda
+        )
+        self.status_frame.pack(fill="x", padx=16, pady=(14, 10))
 
         self.status = ctk.CTkLabel(
-            self.container,
+            self.status_frame,
             text="● PARADO",
             font=("Segoe UI", 13, "bold"),
-            text_color="#f87171"
+            text_color="#fb7185"
         )
+        self.status.pack(pady=10)
 
-        self.status.pack(pady=(12, 8))
+        self.criar_secao("Configuracoes", self.container)
 
-        # ===================== CONFIG =====================
+        self.frame_inputs = ctk.CTkFrame(self.container, fg_color="transparent")
+        self.frame_inputs.pack(fill="x", padx=16, pady=(0, 6))
+        self.frame_inputs.grid_columnconfigure((0, 1), weight=1)
 
-        self.criar_secao(
-            "Configurações",
-            self.container
-        )
+        self.criar_input(self.frame_inputs, "Navegadores", "navegadores", "4", 0)
+        self.criar_input(self.frame_inputs, "Tempo (s)", "login", "5", 1)
+        self.entry_navegadores.bind("<KeyRelease>", lambda e: self.atualizar_niveis())
 
-        self.frame_inputs = ctk.CTkFrame(
-            self.container,
-            fg_color="transparent"
-        )
+        self.criar_input_full("Caminho do Navegador")
 
-        self.frame_inputs.pack(
-            fill="x",
-            padx=16,
-            pady=(0, 6)
-        )
+        self.criar_secao("Nivel de Cada Navegador", self.container)
 
-        self.frame_inputs.grid_columnconfigure(
-            (0, 1),
-            weight=1
-        )
-
-        self.criar_input(
-            self.frame_inputs,
-            "Navegadores",
-            "navegadores",
-            "4",
-            0
-        )
-
-        self.criar_input(
-            self.frame_inputs,
-            "Tempo (s)",
-            "login",
-            "5",
-            1
-        )
-
-        self.entry_navegadores.bind(
-            "<KeyRelease>",
-            lambda e: self.atualizar_niveis()
-        )
-
-        # ===================== PATH =====================
-
-        self.criar_input_full(
-            "Caminho do Navegador"
-        )
-
-        # ===================== NÍVEIS =====================
-
-        self.criar_secao(
-            "Nível de Cada Navegador",
-            self.container
-        )
-
-        self.frame_niveis = ctk.CTkFrame(
-            self.container,
-            fg_color="transparent"
-        )
-
-        self.frame_niveis.pack(
-            fill="x",
-            padx=16,
-            pady=(0, 8)
-        )
-
-        self.niveis_vars = []
-
-        # ===================== CHECKBOX =====================
+        self.frame_niveis = ctk.CTkFrame(self.container, fg_color="transparent")
+        self.frame_niveis.pack(fill="x", padx=16, pady=(0, 8))
 
         self.auto_inicio = ctk.BooleanVar(value=False)
-
         self.checkbox_auto = ctk.CTkCheckBox(
             self.container,
             text="Iniciar automaticamente",
             variable=self.auto_inicio,
             font=("Segoe UI", 12),
-            text_color="#e2e8f0",
-            checkbox_width=16,
-            checkbox_height=16,
+            text_color=self.cor_texto,
+            checkbox_width=17,
+            checkbox_height=17,
+            fg_color=self.cor_secundaria,
+            hover_color="#059669",
+            border_color=self.cor_borda,
             command=self.checkbox_evento
         )
+        self.checkbox_auto.pack(anchor="w", padx=20, pady=(4, 12))
 
-        self.checkbox_auto.pack(
-            anchor="w",
-            padx=20,
-            pady=(4, 10)
-        )
-
-        # ===================== BOTÕES =====================
-
-        self.frame_botoes = ctk.CTkFrame(
-            self.container,
-            fg_color="transparent"
-        )
-
-        self.frame_botoes.pack(
-            fill="x",
-            padx=16,
-            pady=(2, 10)
-        )
-
-        self.frame_botoes.grid_columnconfigure(
-            (0, 1),
-            weight=1
-        )
+        self.frame_botoes = ctk.CTkFrame(self.container, fg_color="transparent")
+        self.frame_botoes.pack(fill="x", padx=16, pady=(2, 10))
+        self.frame_botoes.grid_columnconfigure((0, 1), weight=1)
 
         self.btn_abrir = ctk.CTkButton(
             self.frame_botoes,
-            text="🌐 Abrir Navegadores",
-            height=38,
-            corner_radius=10,
+            text="Abrir navegadores",
+            height=42,
+            corner_radius=9,
             font=("Segoe UI", 12, "bold"),
             fg_color=self.cor_secundaria,
-            hover_color="#4f52cc",
+            hover_color="#059669",
             command=self.iniciar
         )
-
         self.btn_abrir.grid(
             row=0,
             column=0,
@@ -235,192 +170,114 @@ class App(ctk.CTk):
 
         self.btn_iniciar = ctk.CTkButton(
             self.frame_botoes,
-            text="▶ INICIAR",
-            height=38,
-            corner_radius=10,
+            text="Iniciar",
+            height=40,
+            corner_radius=9,
             font=("Segoe UI", 12, "bold"),
-            fg_color="#22c55e",
-            hover_color="#16a34a",
+            fg_color="#2563eb",
+            hover_color="#1d4ed8",
             command=self.enviar_enter
         )
 
         self.btn_parar = ctk.CTkButton(
             self.frame_botoes,
-            text="■ PARAR",
-            height=38,
-            corner_radius=10,
+            text="Parar",
+            height=40,
+            corner_radius=9,
             font=("Segoe UI", 12, "bold"),
-            fg_color="#ef4444",
-            hover_color="#dc2626",
+            fg_color="#e11d48",
+            hover_color="#be123c",
             command=self.parar
         )
 
-        self.btn_iniciar.grid(
-            row=1,
-            column=0,
-            padx=4,
-            pady=4,
-            sticky="ew"
-        )
+        self.btn_iniciar.grid(row=1, column=0, padx=4, pady=4, sticky="ew")
+        self.btn_parar.grid(row=1, column=1, padx=4, pady=4, sticky="ew")
 
-        self.btn_parar.grid(
-            row=1,
-            column=1,
-            padx=4,
-            pady=4,
-            sticky="ew"
-        )
-
-        # ===================== CONSOLE =====================
-
-        self.criar_secao(
-            "Console",
-            self.container
-        )
+        self.criar_secao("Console", self.container)
 
         self.terminal = ctk.CTkTextbox(
             self.container,
             height=220,
-            corner_radius=14,
-            fg_color="#0a0a12",
+            corner_radius=12,
+            fg_color="#070d18",
             font=("Consolas", 11),
-            text_color="#67e8f9",
-            border_width=0
+            text_color="#7dd3fc",
+            border_width=1,
+            border_color=self.cor_borda
         )
-
-        self.terminal.pack(
-            fill="both",
-            expand=True,
-            padx=16,
-            pady=(4, 14)
-        )
-
-        # ===================== INIT =====================
-
-        self.carregar_config()
-
-        self.atualizar_niveis()
-
-        self.atualizar_botoes()
-
-        self.log("🚀 Interface carregada com sucesso.")
+        self.terminal.pack(fill="both", expand=True, padx=16, pady=(4, 14))
 
     # =========================================================
 
     def criar_secao(self, titulo, parent):
-
         label = ctk.CTkLabel(
             parent,
             text=titulo.upper(),
             font=("Segoe UI", 11, "bold"),
-            text_color="#818cf8"
+            text_color=self.cor_principal
         )
-
-        label.pack(
-            anchor="w",
-            padx=20,
-            pady=(10, 4)
-        )
+        label.pack(anchor="w", padx=20, pady=(10, 4))
 
     # =========================================================
 
-    def criar_input(
-        self,
-        parent,
-        texto,
-        nome,
-        valor_padrao,
-        coluna
-    ):
-
-        frame = ctk.CTkFrame(
-            parent,
-            fg_color="transparent"
-        )
-
-        frame.grid(
-            row=0,
-            column=coluna,
-            padx=4,
-            sticky="ew"
-        )
+    def criar_input(self, parent, texto, nome, valor_padrao, coluna):
+        frame = ctk.CTkFrame(parent, fg_color="transparent")
+        frame.grid(row=0, column=coluna, padx=4, sticky="ew")
 
         ctk.CTkLabel(
             frame,
             text=texto,
             font=("Segoe UI", 11, "bold"),
-            text_color="#cbd5e1"
+            text_color=self.cor_texto
         ).pack(anchor="w", pady=(0, 3))
 
         entry = ctk.CTkEntry(
             frame,
-            height=34,
-            corner_radius=10,
+            height=36,
+            corner_radius=9,
             border_width=1,
-            border_color="#334155",
-            fg_color="#1e2233",
+            border_color=self.cor_borda,
+            fg_color=self.cor_input,
+            text_color=self.cor_texto,
             font=("Segoe UI", 11)
         )
-
         entry.pack(fill="x")
-
         entry.insert(0, valor_padrao)
+        entry.bind("<KeyRelease>", lambda e: self.salvar_config())
 
-        entry.bind(
-            "<KeyRelease>",
-            lambda e: self.salvar_config()
-        )
-
-        setattr(
-            self,
-            f"entry_{nome}",
-            entry
-        )
+        setattr(self, f"entry_{nome}", entry)
 
     # =========================================================
 
     def criar_input_full(self, texto):
-
         ctk.CTkLabel(
             self.container,
             text=texto,
             font=("Segoe UI", 11, "bold"),
-            text_color="#cbd5e1"
+            text_color=self.cor_texto
         ).pack(anchor="w", padx=20, pady=(8, 3))
 
         self.entry_path = ctk.CTkEntry(
             self.container,
-            height=34,
-            corner_radius=10,
+            height=36,
+            corner_radius=9,
             border_width=1,
-            border_color="#334155",
-            fg_color="#1e2233",
+            border_color=self.cor_borda,
+            fg_color=self.cor_input,
+            text_color=self.cor_texto,
             font=("Segoe UI", 11)
         )
-
-        self.entry_path.pack(
-            fill="x",
-            padx=20
-        )
-
+        self.entry_path.pack(fill="x", padx=20)
         self.entry_path.insert(
             0,
             r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
         )
-
-        self.entry_path.bind(
-            "<KeyRelease>",
-            lambda e: self.salvar_config()
-        )
+        self.entry_path.bind("<KeyRelease>", lambda e: self.salvar_config())
 
     # =========================================================
 
     def atualizar_niveis(self):
-
-        niveis_anteriores = [
-            var.get()
-            for var in self.niveis_vars
-        ]
+        niveis_anteriores = [var.get() for var in self.niveis_vars]
 
         for widget in self.frame_niveis.winfo_children():
             widget.destroy()
@@ -429,37 +286,29 @@ class App(ctk.CTk):
 
         try:
             total = int(self.entry_navegadores.get())
-        except:
+        except Exception:
             total = 1
 
         for i in range(total):
-
             frame = ctk.CTkFrame(
                 self.frame_niveis,
-                fg_color="#1a1a25",
+                fg_color=self.cor_card_claro,
                 corner_radius=10,
-                height=40
+                height=42,
+                border_width=1,
+                border_color=self.cor_borda
             )
-
-            frame.pack(
-                fill="x",
-                pady=3
-            )
+            frame.pack(fill="x", pady=4)
 
             label = ctk.CTkLabel(
                 frame,
-                text=f"Navegador {i+1}",
-                font=("Segoe UI", 11, "bold")
+                text=f"Navegador {i + 1}",
+                font=("Segoe UI", 11, "bold"),
+                text_color=self.cor_texto
             )
-
-            label.pack(
-                side="left",
-                padx=12,
-                pady=8
-            )
+            label.pack(side="left", padx=12, pady=8)
 
             valor = "1"
-
             if i < len(niveis_anteriores):
                 valor = niveis_anteriores[i]
 
@@ -469,19 +318,20 @@ class App(ctk.CTk):
                 frame,
                 values=["1", "2"],
                 variable=var,
-                width=85,
+                width=90,
                 height=30,
                 corner_radius=8,
+                border_width=1,
+                border_color=self.cor_borda,
+                fg_color=self.cor_input,
+                button_color=self.cor_secundaria,
+                button_hover_color="#059669",
+                dropdown_fg_color=self.cor_card_claro,
+                dropdown_hover_color=self.cor_borda,
                 font=("Segoe UI", 11),
                 command=lambda valor: self.salvar_config()
             )
-
-            combo.pack(
-                side="right",
-                padx=8,
-                pady=5
-            )
-
+            combo.pack(side="right", padx=8, pady=5)
             self.niveis_vars.append(var)
 
         self.salvar_config()
@@ -489,45 +339,25 @@ class App(ctk.CTk):
     # =========================================================
 
     def checkbox_evento(self):
-
         self.atualizar_botoes()
-
         self.salvar_config()
 
     # =========================================================
 
     def log(self, texto):
-
         if "LIMITE DE PONTOS ATINGIDO" in texto:
-
-            self.terminal.insert(
-                END,
-                f"{texto}\n",
-                "verde"
-            )
-
+            self.terminal.insert(END, f"{texto}\n", "verde")
         else:
+            self.terminal.insert(END, f"{texto}\n")
 
-            self.terminal.insert(
-                END,
-                f"{texto}\n"
-            )
-
-        self.terminal.tag_config(
-            "verde",
-            foreground="#22c55e"
-        )
-
+        self.terminal.tag_config("verde", foreground="#22c55e")
         self.terminal.see("end")
 
     # =========================================================
 
     def atualizar_botoes(self):
-
         if self.auto_inicio.get():
-
             self.btn_iniciar.grid_remove()
-
             self.btn_parar.grid(
                 row=1,
                 column=0,
@@ -536,57 +366,25 @@ class App(ctk.CTk):
                 pady=4,
                 sticky="ew"
             )
-
         else:
-
-            self.btn_parar.grid(
-                row=1,
-                column=1,
-                padx=4,
-                pady=4,
-                sticky="ew"
-            )
-
-            self.btn_iniciar.grid(
-                row=1,
-                column=0,
-                padx=4,
-                pady=4,
-                sticky="ew"
-            )
+            self.btn_parar.grid(row=1, column=1, padx=4, pady=4, sticky="ew")
+            self.btn_iniciar.grid(row=1, column=0, padx=4, pady=4, sticky="ew")
 
     # =========================================================
 
     def carregar_config(self):
-
         if os.path.exists("config_app.json"):
-
             try:
-
-                with open(
-                    "config_app.json",
-                    "r",
-                    encoding="cp1252"
-                ) as f:
-
+                with open("config_app.json", "r", encoding="cp1252") as f:
                     config = json.load(f)
 
                 self.entry_navegadores.delete(0, "end")
-
-                self.entry_navegadores.insert(
-                    0,
-                    config.get("navegadores", 4)
-                )
+                self.entry_navegadores.insert(0, config.get("navegadores", 4))
 
                 self.entry_login.delete(0, "end")
-
-                self.entry_login.insert(
-                    0,
-                    config.get("tempo_login", 5)
-                )
+                self.entry_login.insert(0, config.get("tempo_login", 5))
 
                 self.entry_path.delete(0, "end")
-
                 self.entry_path.insert(
                     0,
                     config.get(
@@ -595,109 +393,54 @@ class App(ctk.CTk):
                     )
                 )
 
-                self.auto_inicio.set(
-                    config.get("auto_inicio", False)
-                )
-
+                self.auto_inicio.set(config.get("auto_inicio", False))
                 self.atualizar_niveis()
 
                 niveis = config.get("niveis", [])
-
                 for i, nivel in enumerate(niveis):
-
                     if i < len(self.niveis_vars):
+                        self.niveis_vars[i].set(str(nivel))
 
-                        self.niveis_vars[i].set(
-                            str(nivel)
-                        )
-
-                self.log(
-                    "[CONFIG] Configurações carregadas."
-                )
+                self.log("[CONFIG] Configuracoes carregadas.")
 
             except Exception as e:
-
-                self.log(
-                    f"[ERRO] {e}"
-                )
+                self.log(f"[ERRO] {e}")
 
     # =========================================================
 
     def salvar_config(self):
-
         try:
-
             config = {
-
-                "navegadores": int(
-                    self.entry_navegadores.get()
-                ),
-
-                "tempo_login": int(
-                    self.entry_login.get()
-                ),
-
+                "navegadores": int(self.entry_navegadores.get()),
+                "tempo_login": int(self.entry_login.get()),
                 "browser_path": self.entry_path.get(),
-
                 "auto_inicio": self.auto_inicio.get(),
-
-                "niveis": [
-                    var.get()
-                    for var in self.niveis_vars
-                ]
+                "niveis": [var.get() for var in self.niveis_vars]
             }
 
-            with open(
-                "config_app.json",
-                "w",
-                encoding="cp1252"
-            ) as f:
+            with open("config_app.json", "w", encoding="cp1252") as f:
+                json.dump(config, f, indent=4)
 
-                json.dump(
-                    config,
-                    f,
-                    indent=4
-                )
-
-        except:
+        except Exception:
             pass
 
     # =========================================================
 
     def iniciar(self):
-
-        self.status.configure(
-            text="● EXECUTANDO",
-            text_color="#4ade80"
-        )
-
-        self.btn_abrir.configure(
-            state="disabled"
-        )
-
-        self.log(
-            "[SISTEMA] Abrindo navegadores..."
-        )
+        self.status.configure(text="● EXECUTANDO", text_color="#22c55e")
+        self.btn_abrir.configure(state="disabled")
+        self.log("[SISTEMA] Abrindo navegadores...")
 
         def rodar():
-
             try:
-
-                niveis = ",".join(
-                    [
-                        var.get()
-                        for var in self.niveis_vars
-                    ]
-                )
+                niveis = ",".join([var.get() for var in self.niveis_vars])
 
                 self.processo = subprocess.Popen(
-
                     [
                         "py",
                         "main.py",
                         niveis
                     ],
-
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
@@ -707,100 +450,60 @@ class App(ctk.CTk):
                 )
 
                 if self.auto_inicio.get():
-
                     self.processo.stdin.write("\n")
-
                     self.processo.stdin.flush()
 
                 while True:
-
                     linha = self.processo.stdout.readline()
 
                     if not linha:
                         break
 
                     linha = linha.strip()
-
                     if linha:
-
-                        self.after(
-                            0,
-                            lambda l=linha: self.log(l)
-                        )
+                        self.after(0, lambda l=linha: self.log(l))
 
             except Exception as e:
-
-                self.log(
-                    f"[ERRO] {e}"
-                )
+                self.after(0, lambda: self.log(f"[ERRO] {e}"))
 
             finally:
+                self.after(0, self.finalizar_execucao)
 
-                self.status.configure(
-                    text="● FINALIZADO",
-                    text_color="#60a5fa"
-                )
+        threading.Thread(target=rodar, daemon=True).start()
 
-                self.btn_abrir.configure(
-                    state="normal"
-                )
+    # =========================================================
 
-        threading.Thread(
-            target=rodar,
-            daemon=True
-        ).start()
+    def finalizar_execucao(self):
+        self.status.configure(text="● FINALIZADO", text_color="#60a5fa")
+        self.btn_abrir.configure(state="normal")
 
     # =========================================================
 
     def enviar_enter(self):
-
         if self.processo:
-
             try:
-
                 self.processo.stdin.write("\n")
-
                 self.processo.stdin.flush()
+                self.log("[SISTEMA] Sinal de inicio enviado.")
 
-                self.log(
-                    "[SISTEMA] Sinal de início enviado."
-                )
-
-            except:
-
-                self.log(
-                    "[ERRO] Não foi possível enviar comando."
-                )
+            except Exception:
+                self.log("[ERRO] Nao foi possivel enviar comando.")
 
     # =========================================================
 
     def parar(self):
-
         if self.processo:
-
             try:
-
                 self.processo.terminate()
+                self.log("[SISTEMA] Processo parado pelo usuario.")
 
-                self.log(
-                    "[SISTEMA] Processo parado pelo usuário."
-                )
-
-            except:
+            except Exception:
                 pass
 
-            self.status.configure(
-                text="● PARADO",
-                text_color="#f87171"
-            )
-
-            self.btn_abrir.configure(
-                state="normal"
-            )
+            self.status.configure(text="● PARADO", text_color="#fb7185")
+            self.btn_abrir.configure(state="normal")
 
 
 if __name__ == "__main__":
-
     app = App()
-
     app.mainloop()
