@@ -177,7 +177,8 @@ with sync_playwright() as p:
             "pagina": pagina,
             "nivel": nivel,
             "limite": limite,
-            "pontos": 0
+            "pontos": 0,
+            "limite_avisado": False
 
         })
 
@@ -244,11 +245,15 @@ with sync_playwright() as p:
 
             if pontos >= limite:
 
-                log(
-                    f"\n[NAVEGADOR {indice+1}] "
-                    f"LIMITE DE PONTOS ATINGIDO "
-                    f"({pontos}/{limite})"
-                )
+                if not navegador_data["limite_avisado"]:
+
+                    log(
+                        f"\n[NAVEGADOR {indice+1}] "
+                        f"LIMITE DE PONTOS ATINGIDO "
+                        f"({pontos}/{limite})"
+                    )
+
+                    navegador_data["limite_avisado"] = True
 
                 continue
 
@@ -415,8 +420,11 @@ with sync_playwright() as p:
 
                     log(
                         f"[NAVEGADOR {indice+1}] "
-                        f"LIMITE DE PONTOS ATINGIDO"
+                        f"LIMITE DE PONTOS ATINGIDO "
+                        f"({pontos_atuais}/{limite})"
                     )
+
+                    navegador_data["limite_avisado"] = True
 
             except Exception as e:
 
@@ -443,6 +451,17 @@ with sync_playwright() as p:
             )
 
             time.sleep(delay)
+
+        if all(
+            navegador_data["pontos"] >= navegador_data["limite"]
+            for navegador_data in navegadores
+        ):
+
+            log(
+                "\n[SISTEMA] Todos os navegadores atingiram o limite de pontos."
+            )
+
+            break
 
     log(
         "\n[SISTEMA] Pesquisas finalizadas."
