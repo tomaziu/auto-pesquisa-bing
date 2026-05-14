@@ -4,6 +4,8 @@ import subprocess
 import threading
 import json
 import os
+import ctypes
+import ctypes.wintypes
 
 
 ctk.set_appearance_mode("dark")
@@ -16,8 +18,9 @@ class App(ctk.CTk):
         super().__init__()
 
         self.title("Auto Pesquisa - Bing")
-        self.geometry("560x760")
-        self.minsize(520, 690)
+        self.geometry("540x640")
+        self.minsize(500, 590)
+        self.centralizar_janela(540, 640)
 
         self.cor_principal = "#38bdf8"
         self.cor_secundaria = "#10b981"
@@ -47,27 +50,49 @@ class App(ctk.CTk):
 
     # =========================================================
 
+    def centralizar_janela(self, largura, altura):
+        self.update_idletasks()
+
+        area_trabalho = ctypes.wintypes.RECT()
+
+        ctypes.windll.user32.SystemParametersInfoW(
+            0x0030,
+            0,
+            ctypes.byref(area_trabalho),
+            0
+        )
+
+        largura_tela = area_trabalho.right - area_trabalho.left
+        altura_tela = area_trabalho.bottom - area_trabalho.top
+
+        pos_x = area_trabalho.left + int((largura_tela - largura) / 2)
+        pos_y = area_trabalho.top + int((altura_tela - altura) / 2)
+
+        self.geometry(f"{largura}x{altura}+{pos_x}+{pos_y}")
+
+    # =========================================================
+
     def criar_topo(self):
         self.topo = ctk.CTkFrame(
             self,
             fg_color=self.cor_card,
             corner_radius=0,
-            height=108
+            height=82
         )
         self.topo.pack(fill="x")
 
         self.titulo = ctk.CTkLabel(
             self.topo,
             text="Auto Pesquisa Bing",
-            font=("Segoe UI", 27, "bold"),
+            font=("Segoe UI", 23, "bold"),
             text_color=self.cor_texto
         )
-        self.titulo.pack(pady=(18, 0))
+        self.titulo.pack(pady=(10, 0))
 
         self.subtitulo = ctk.CTkLabel(
             self.topo,
             text="Automacao de pesquisas com perfis separados",
-            font=("Segoe UI", 12),
+            font=("Segoe UI", 11),
             text_color=self.cor_texto_suave
         )
         self.subtitulo.pack()
@@ -76,7 +101,7 @@ class App(ctk.CTk):
             self.topo,
             fg_color=self.cor_secundaria,
             height=3
-        ).pack(fill="x", padx=76, pady=(14, 0))
+        ).pack(fill="x", padx=76, pady=(9, 0))
 
     # =========================================================
 
@@ -92,7 +117,7 @@ class App(ctk.CTk):
             fill="both",
             expand=True,
             padx=18,
-            pady=18
+            pady=(14, 10)
         )
 
         self.status_frame = ctk.CTkFrame(
@@ -102,7 +127,7 @@ class App(ctk.CTk):
             border_width=1,
             border_color=self.cor_borda
         )
-        self.status_frame.pack(fill="x", padx=16, pady=(14, 10))
+        self.status_frame.pack(fill="x", padx=16, pady=(10, 8))
 
         self.status = ctk.CTkLabel(
             self.status_frame,
@@ -110,7 +135,7 @@ class App(ctk.CTk):
             font=("Segoe UI", 13, "bold"),
             text_color="#fb7185"
         )
-        self.status.pack(pady=10)
+        self.status.pack(pady=8)
 
         self.criar_secao("Configuracoes", self.container)
 
