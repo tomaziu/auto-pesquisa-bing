@@ -35,7 +35,6 @@ Automação de pesquisas no Bing utilizando Python + Playwright com interface mo
 - Python 3
 - Playwright
 - CustomTkinter
-- Microsoft Edge
 
 ---
 
@@ -100,45 +99,11 @@ Cada navegador pode possuir um nível diferente.
 
 ---
 
-# 📁 Estrutura do Projeto
-
-```bash
-📦 auto-pesquisa-bing
- ┣ 📂 perfis
- ┣ 📜 app.py
- ┣ 📜 main.py
- ┣ 📜 config.py
- ┣ 📜 utils.py
- ┣ 📜 gerador.py
- ┣ 📜 navegadores.py
- ┣ 📜 pesquisas.txt
- ┣ 📜 requirements.txt
- ┗ 📜 README.md
-```
-
----
-
-# ⚠️ Importante
-
-As pastas de perfis NÃO devem ser enviadas para o GitHub.
-
-Certifique-se de possuir no `.gitignore`:
-
-```gitignore
-perfil_*/
-perfis/
-config_app.json
-__pycache__/
-*.pyc
-```
-
----
-
 # 🔒 Observações
 
-- O projeto utiliza perfis persistentes do navegador.
-- Pode armazenar sessões e cookies localmente.
-- Utilize com responsabilidade.
+- O projeto utiliza perfis persistentes do navegador
+- Pode armazenar sessões e cookies localmente
+- Utilize com responsabilidade
 
 ---
 
@@ -146,7 +111,7 @@ __pycache__/
 
 - Windows 10/11
 - Python 3.10+
-- Microsoft Edge instalado
+- Qualquer navegador compatível com Chromium
 
 ---
 
