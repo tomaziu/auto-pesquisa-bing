@@ -2,10 +2,10 @@ import customtkinter as ctk
 from tkinter import END
 import subprocess
 import threading
-import json
-import os
 import ctypes
 import ctypes.wintypes
+
+from config_manager import DEFAULT_BROWSER_PATH, carregar_config, salvar_config
 
 
 ctk.set_appearance_mode("dark")
@@ -131,7 +131,7 @@ class App(ctk.CTk):
 
         self.status = ctk.CTkLabel(
             self.status_frame,
-            text="● PARADO",
+            text="PARADO",
             font=("Segoe UI", 13, "bold"),
             text_color="#fb7185"
         )
@@ -295,7 +295,7 @@ class App(ctk.CTk):
         self.entry_path.pack(fill="x", padx=20)
         self.entry_path.insert(
             0,
-            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+            DEFAULT_BROWSER_PATH
         )
         self.entry_path.bind("<KeyRelease>", lambda e: self.salvar_config())
 
@@ -398,38 +398,30 @@ class App(ctk.CTk):
     # =========================================================
 
     def carregar_config(self):
-        if os.path.exists("config_app.json"):
-            try:
-                with open("config_app.json", "r", encoding="cp1252") as f:
-                    config = json.load(f)
+        try:
+            config = carregar_config()
 
-                self.entry_navegadores.delete(0, "end")
-                self.entry_navegadores.insert(0, config.get("navegadores", 4))
+            self.entry_navegadores.delete(0, "end")
+            self.entry_navegadores.insert(0, config.get("navegadores", 4))
 
-                self.entry_login.delete(0, "end")
-                self.entry_login.insert(0, config.get("tempo_login", 5))
+            self.entry_login.delete(0, "end")
+            self.entry_login.insert(0, config.get("tempo_login", 5))
 
-                self.entry_path.delete(0, "end")
-                self.entry_path.insert(
-                    0,
-                    config.get(
-                        "browser_path",
-                        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-                    )
-                )
+            self.entry_path.delete(0, "end")
+            self.entry_path.insert(0, config.get("browser_path", DEFAULT_BROWSER_PATH))
 
-                self.auto_inicio.set(config.get("auto_inicio", False))
-                self.atualizar_niveis()
+            self.auto_inicio.set(config.get("auto_inicio", False))
+            self.atualizar_niveis()
 
-                niveis = config.get("niveis", [])
-                for i, nivel in enumerate(niveis):
-                    if i < len(self.niveis_vars):
-                        self.niveis_vars[i].set(str(nivel))
+            niveis = config.get("niveis", [])
+            for i, nivel in enumerate(niveis):
+                if i < len(self.niveis_vars):
+                    self.niveis_vars[i].set(str(nivel))
 
-                self.log("[CONFIG] Configuracoes carregadas.")
+            self.log("[CONFIG] Configuracoes carregadas.")
 
-            except Exception as e:
-                self.log(f"[ERRO] {e}")
+        except Exception as e:
+            self.log(f"[ERRO] {e}")
 
     # =========================================================
 
@@ -443,8 +435,7 @@ class App(ctk.CTk):
                 "niveis": [var.get() for var in self.niveis_vars]
             }
 
-            with open("config_app.json", "w", encoding="cp1252") as f:
-                json.dump(config, f, indent=4)
+            salvar_config(config)
 
         except Exception:
             pass
@@ -452,7 +443,7 @@ class App(ctk.CTk):
     # =========================================================
 
     def iniciar(self):
-        self.status.configure(text="● EXECUTANDO", text_color="#22c55e")
+        self.status.configure(text="EXECUTANDO", text_color="#22c55e")
         self.btn_abrir.configure(state="disabled")
         self.log("[SISTEMA] Abrindo navegadores...")
 
@@ -499,7 +490,7 @@ class App(ctk.CTk):
     # =========================================================
 
     def finalizar_execucao(self):
-        self.status.configure(text="● FINALIZADO", text_color="#60a5fa")
+        self.status.configure(text="FINALIZADO", text_color="#60a5fa")
         self.btn_abrir.configure(state="normal")
 
     # =========================================================
@@ -525,7 +516,7 @@ class App(ctk.CTk):
             except Exception:
                 pass
 
-            self.status.configure(text="● PARADO", text_color="#fb7185")
+            self.status.configure(text="PARADO", text_color="#fb7185")
             self.btn_abrir.configure(state="normal")
 
 
