@@ -90,6 +90,14 @@ ou
 python app.py
 ```
 
+Tambem e possivel iniciar pelo arquivo `.bat`:
+
+```bat
+iniciar_app.bat
+```
+
+No Windows, basta dar dois cliques no arquivo `iniciar_app.bat` dentro da pasta do projeto.
+
 ---
 
 # 🧠 Sistema de Níveis
